@@ -15,5 +15,6 @@ int main() {
     std::cout << "  \\               /" << std::endl;
     std::cout << "   \\             /" << std::endl;
     std::cout << "    \\___________/" << std::endl;
+    std::cout << "       Jumaisinba      " << std::endl;
     return 0;
 }
