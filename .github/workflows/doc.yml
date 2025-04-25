@@ -11,11 +11,13 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4  # Обновлено до v4
+      uses: actions/checkout@v4
 
     - name: Install Doxygen
       run: |
-        choco install doxygen.install --version=1.9.1
+        choco install doxygen.install --version=1.9.1 -y
+        refreshenv
+        doxygen --version
 
     - name: Generate Doxygen Documentation
       run: doxygen Doxyfile
@@ -24,7 +26,7 @@ jobs:
       run: dir docs\html
 
     - name: Upload Documentation
-      uses: actions/upload-artifact@v4  # Обновлено до v4
+      uses: actions/upload-artifact@v4
       with:
         name: docs
         path: docs/html
