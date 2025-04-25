@@ -15,17 +15,23 @@ jobs:
 
     - name: Install Doxygen
       run: |
-        choco install doxygen.install --version=1.9.1 -y
-        # Явное добавление пути к Doxygen в PATH
-        $doxygenPath = "C:\Program Files\doxygen\bin"
-        $env:PATH = "$doxygenPath;$env:PATH"
-        doxygen --version
+        choco install doxygen.install --version=1.9.1 -y --no-progress
+        # Проверяем, что Doxygen установился
+        if (!(Test-Path "C:\Program Files\doxygen\bin\doxygen.exe")) {
+          Write-Error "Doxygen installation failed!"
+          exit 1
+        }
 
     - name: Generate Doxygen Documentation
-      run: doxygen Doxyfile
+      run: "C:\Program Files\doxygen\bin\doxygen.exe Doxyfile"
 
     - name: Check Documentation Directory
-      run: dir docs\html
+      run: |
+        if (!(Test-Path "docs\html")) {
+          Write-Error "Documentation was not generated!"
+          exit 1
+        }
+        dir docs\html
 
     - name: Upload Documentation
       uses: actions/upload-artifact@v4
