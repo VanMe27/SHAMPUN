@@ -16,7 +16,9 @@ jobs:
     - name: Install Doxygen
       run: |
         choco install doxygen.install --version=1.9.1 -y
-        refreshenv
+        # Явное добавление пути к Doxygen в PATH
+        $doxygenPath = "C:\Program Files\doxygen\bin"
+        $env:PATH = "$doxygenPath;$env:PATH"
         doxygen --version
 
     - name: Generate Doxygen Documentation
