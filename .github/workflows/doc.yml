@@ -16,14 +16,13 @@ jobs:
     - name: Install Doxygen
       run: |
         choco install doxygen.install --version=1.9.1 -y --no-progress
-        # Проверяем, что Doxygen установился
         if (!(Test-Path "C:\Program Files\doxygen\bin\doxygen.exe")) {
           Write-Error "Doxygen installation failed!"
           exit 1
         }
 
     - name: Generate Doxygen Documentation
-      run: "C:\Program Files\doxygen\bin\doxygen.exe Doxyfile"
+      run: "& 'C:\Program Files\doxygen\bin\doxygen.exe' Doxyfile"
 
     - name: Check Documentation Directory
       run: |
