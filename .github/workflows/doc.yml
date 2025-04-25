@@ -21,10 +21,12 @@ jobs:
           exit 1
         }
 
-    - name: Generate Doxygen Documentation
-      run: "& 'C:\Program Files\doxygen\bin\doxygen.exe' Doxyfile"
+    - name: Generate Documentation
+      run: |
+        $doxygenPath = "C:\Program Files\doxygen\bin\doxygen.exe"
+        & "$doxygenPath" Doxyfile
 
-    - name: Check Documentation Directory
+    - name: Verify Documentation
       run: |
         if (!(Test-Path "docs\html")) {
           Write-Error "Documentation was not generated!"
@@ -32,8 +34,8 @@ jobs:
         }
         dir docs\html
 
-    - name: Upload Documentation
+    - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: docs
+        name: documentation
         path: docs/html
