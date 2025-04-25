@@ -17,7 +17,7 @@ jobs:
       run: sudo apt-get update && sudo apt-get install -y g++
 
     - name: Compile shampoo.cpp
-      run: g++ -o shampoo shampoo.cpp
+      run: g++ -o Shampoo Shampoo.cpp
 
-    - name: Run shampoo.cpp
-      run: ./shampoo
+    - name: Run Shampoo.cpp
+      run: ./Shampoo
