@@ -1,0 +1,27 @@
+name: Generate Documentation
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  generate-docs:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install Doxygen
+      run: |
+        choco install doxygen.install --version=1.9.1
+
+    - name: Generate Doxygen Documentation
+      run: doxygen Doxyfile
+
+    - name: Upload Documentation
+      uses: actions/upload-artifact@v2
+      with:
+        name: docs
+        path: docs/html
