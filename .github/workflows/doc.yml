@@ -13,6 +13,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+   - name: Check Documentation Directory
+     run: dir docs\html
+
     - name: Install Doxygen
       run: |
         choco install doxygen.install --version=1.9.1
@@ -21,7 +24,8 @@ jobs:
       run: doxygen Doxyfile
 
     - name: Upload Documentation
-      uses: actions/upload-artifact@v2
-      with:
-        name: docs
-        path: docs/html
+     uses: actions/upload-artifact@v3
+     with:
+       name: docs
+       path: docs/html
+
