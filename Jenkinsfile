@@ -1,67 +1,40 @@
 pipeline {
-    agent any  // Запуск на любом агенте (Windows/Linux)
+    agent any
     
     stages {
-        // Этап 1: Получение кода из репозитория
-        stage('Checkout') {
-            steps {
-                git branch: 'main', 
-                url: 'https://github.com/VanMe27/SHAMPUN.git'  
-            }
-        }
-        
-        // Этап 2: Сборка проекта (используем CMake и make)
+        // Этап 1: Получение кода (автоматически через SCM)
         stage('Build') {
             steps {
                 script {
-                    // Для Windows (MinGW или MSVC)
-                    if (isUnix()) {
-                        sh '''
-                            mkdir -p build
-                            cd build
-                            cmake ..
-                            make
-                        '''
-                    } else {
-                        bat '''
-                            mkdir build
-                            cd build
-                            cmake -G "MinGW Makefiles" ..
-                            mingw32-make
-                        '''
-                    }
+                    // Используем MSBuild (Visual Studio)
+                    bat """
+                        mkdir build
+                        cd build
+                        cmake -G "Visual Studio 17 2022" ..
+                        cmake --build . --config Release
+                    """
                 }
             }
         }
         
-        // Этап 3: Запуск тестов (если есть)
+        // Этап 2: Запуск тестов (если есть)
         stage('Test') {
             steps {
-                script {
-                    if (isUnix()) {
-                        sh 'cd build && ctest --verbose'
-                    } else {
-                        bat 'cd build && ctest --verbose'
-                    }
-                }
-            }
-        }
-        
-        // Этап 4: Упаковка артефактов (например, .exe или .a)
-        stage('Archive') {
-            steps {
-                archiveArtifacts artifacts: 'build/**/*.exe,build/**/*.a,build/**/*.so', 
-                                fingerprint: true
+                bat 'cd build && ctest --verbose'
             }
         }
     }
     
-    // Действия после сборки
     post {
         always {
-            emailext body: "Сборка ${currentBuild.currentResult}\nПодробности: ${env.BUILD_URL}",
-                     subject: "Результат сборки C++ проекта",
-                     to: 'ghostprizrak2011@gmail.com'
+            // Архивируем артефакты (исполняемые файлы)
+            archiveArtifacts artifacts: 'build/Release/**/*.exe', fingerprint: true
+        }
+        failure {
+            // Уведомление о неудачной сборке
+            mail to: 'ghostprizrak2011@gmail.com',
+                 subject: "Сборка ${env.JOB_NAME} провалилась",
+                 body: "Подробности: ${env.BUILD_URL}"
         }
     }
 }
