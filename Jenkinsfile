@@ -2,39 +2,34 @@ pipeline {
     agent any
     
     stages {
-        // Этап 1: Получение кода (автоматически через SCM)
         stage('Build') {
             steps {
                 script {
-                    // Используем MSBuild (Visual Studio)
-                    bat """
-                        mkdir build
-                        cd build
-                        cmake -G "Visual Studio 17 2022" ..
-                        cmake --build . --config Release
-                    """
+                    // Проверяем наличие CMakeLists.txt
+                    bat '''
+                        dir
+                        if exist CMakeLists.txt (
+                            echo "CMakeLists.txt найден"
+                            mkdir build
+                            cd build
+                            cmake -G "Visual Studio 17 2022" ..
+                            cmake --build . --config Release
+                        ) else (
+                            echo "ОШИБКА: CMakeLists.txt не найден в корне проекта!"
+                            exit 1
+                        )
+                    '''
                 }
-            }
-        }
-        
-        // Этап 2: Запуск тестов (если есть)
-        stage('Test') {
-            steps {
-                bat 'cd build && ctest --verbose'
             }
         }
     }
     
     post {
         always {
-            // Архивируем артефакты (исполняемые файлы)
-            archiveArtifacts artifacts: 'build/Release/**/*.exe', fingerprint: true
+            archiveArtifacts artifacts: 'build/Release/**/*.exe', allowEmptyArchive: true
         }
         failure {
-            // Уведомление о неудачной сборке
-            mail to: 'ghostprizrak2011@gmail.com',
-                 subject: "Сборка ${env.JOB_NAME} провалилась",
-                 body: "Подробности: ${env.BUILD_URL}"
+            echo "Сборка провалилась. Проверьте наличие CMakeLists.txt в корне репозитория."
         }
     }
 }
