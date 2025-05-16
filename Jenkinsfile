@@ -1,13 +1,19 @@
 pipeline {
     agent any
     
+    environment {
+        // Путь к компилятору Visual Studio (измените под вашу версию!)
+        VS_PATH = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build"
+    }
+    
     stages {
         stage('Build') {
             steps {
                 script {
-                    // Простая компиляция C++ файла напрямую через cl (MSVC)
                     bat """
-                        dir /b /s *.cpp  # Выводим список всех CPP файлов
+                        @echo off
+                        call "%VS_PATH%\\vcvarsall.bat" x64
+                        dir /b *.cpp
                         cl /EHsc /Fe:shampoo.exe Shampoo.cpp
                     """
                 }
@@ -16,7 +22,6 @@ pipeline {
         
         stage('Archive') {
             steps {
-                // Архивируем полученный exe-файл
                 archiveArtifacts artifacts: 'shampoo.exe', fingerprint: true
             }
         }
@@ -24,13 +29,13 @@ pipeline {
     
     post {
         always {
-            echo "Сборка завершена с статусом: ${currentBuild.currentResult}"
+            echo "Результат сборки: ${currentBuild.currentResult}"
         }
         failure {
-            echo "Сборка провалилась. Проверьте:"
-            echo "1. Наличие Shampoo.cpp в корне проекта"
-            echo "2. Установлен ли Visual Studio Build Tools"
-            echo "3. Добавлен ли компилятор cl в PATH"
+            echo "Проверьте следующее:"
+            echo "1. Файл Shampoo.cpp должен быть в корне репозитория"
+            echo "2. Установите Visual Studio 2022 Build Tools"
+            echo "3. Обновите путь к VS_PATH в Jenkinsfile если требуется"
         }
     }
 }
