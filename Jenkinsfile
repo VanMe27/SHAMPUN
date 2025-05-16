@@ -1,12 +1,11 @@
 pipeline {
     agent any
-    
+
     environment {
-        // Явное указание путей (измените под свою систему)
-        VS_PATH = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community"
         CMAKE_PATH = "C:\\Program Files\\CMake\\bin\\cmake.exe"
+        VS_PATH = '"C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\Common7\\Tools\\VsDevCmd.bat"'
     }
-    
+
     stages {
         stage('Verify Tools') {
             steps {
@@ -14,33 +13,33 @@ pipeline {
                     // Проверка наличия CMake
                     bat """
                         @echo off
-                        if exist "${env.CMAKE_PATH}" (
-                            echo CMake найден: ${env.CMAKE_PATH}
+                        if exist ${CMAKE_PATH} (
+                            echo CMake найден: ${CMAKE_PATH}
                         ) else (
                             echo ОШИБКА: CMake не найден! Установите с https://cmake.org/download/
                             exit 1
                         )
                     """
-                    
-                    // Проверка наличия Visual Studio
+
+                    // Проверка наличия Visual Studio (VsDevCmd.bat)
                     bat """
                         @echo off
-                        if exist "${env.VS_PATH}\\VC\\Auxiliary\\Build\\vcvarsall.bat" (
-                            echo Visual Studio найден: ${env.VS_PATH}
+                        if exist ${VS_PATH} (
+                            echo Visual Studio найден: ${VS_PATH}
                         ) else (
-                            echo ОШИБКА: Visual Studio не найдена! Установите Community версию
+                            echo ОШИБКА: Visual Studio не найдена! Проверьте путь VS_PATH
                             exit 1
                         )
                     """
-                    
-                    // Проверка файлов проекта
+
+                    // Проверка наличия исходных файлов
                     bat """
                         @echo off
-                        dir /b CMakeLists.txt || (
+                        if not exist CMakeLists.txt (
                             echo ОШИБКА: CMakeLists.txt не найден!
                             exit 1
                         )
-                        dir /b Shampoo.cpp || (
+                        if not exist Shampoo.cpp (
                             echo ОШИБКА: Shampoo.cpp не найден!
                             exit 1
                         )
@@ -48,42 +47,42 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Generate Project') {
             steps {
                 bat """
                     @echo off
-                    call "${env.VS_PATH}\\VC\\Auxiliary\\Build\\vcvarsall.bat" x64
+                    call ${VS_PATH}
                     mkdir build
                     cd build
-                    "${env.CMAKE_PATH}" -G "Visual Studio 17 2022" ..
+                    ${CMAKE_PATH} -G "Visual Studio 17 2022" ..
                 """
             }
         }
-        
+
         stage('Build') {
             steps {
                 bat """
                     @echo off
-                    call "${env.VS_PATH}\\VC\\Auxiliary\\Build\\vcvarsall.bat" x64
+                    call ${VS_PATH}
                     cd build
-                    "${env.CMAKE_PATH}" --build . --config Release
+                    ${CMAKE_PATH} --build . --config Release
                 """
             }
         }
-        
+
         stage('Archive') {
             steps {
                 archiveArtifacts artifacts: 'build/Release/shampoo.exe', fingerprint: true
             }
         }
     }
-    
+
     post {
         failure {
             echo "ДЛЯ ИСПРАВЛЕНИЯ:"
             echo "1. Убедитесь, что установлены:"
-            echo "   - Visual Studio 2022 Community с C++"
+            echo "   - Visual Studio 2022 Professional с C++"
             echo "   - CMake 3.15+"
             echo "2. Проверьте пути в environment{} в Jenkinsfile"
             echo "3. Запустите Jenkins от имени администратора"
