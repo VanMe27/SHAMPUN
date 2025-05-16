@@ -5,31 +5,32 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    // Проверяем наличие CMakeLists.txt
-                    bat '''
-                        dir
-                        if exist CMakeLists.txt (
-                            echo "CMakeLists.txt найден"
-                            mkdir build
-                            cd build
-                            cmake -G "Visual Studio 17 2022" ..
-                            cmake --build . --config Release
-                        ) else (
-                            echo "ОШИБКА: CMakeLists.txt не найден в корне проекта!"
-                            exit 1
-                        )
-                    '''
+                    // Простая компиляция C++ файла напрямую через cl (MSVC)
+                    bat """
+                        dir /b /s *.cpp  # Выводим список всех CPP файлов
+                        cl /EHsc /Fe:shampoo.exe Shampoo.cpp
+                    """
                 }
+            }
+        }
+        
+        stage('Archive') {
+            steps {
+                // Архивируем полученный exe-файл
+                archiveArtifacts artifacts: 'shampoo.exe', fingerprint: true
             }
         }
     }
     
     post {
         always {
-            archiveArtifacts artifacts: 'build/Release/**/*.exe', allowEmptyArchive: true
+            echo "Сборка завершена с статусом: ${currentBuild.currentResult}"
         }
         failure {
-            echo "Сборка провалилась. Проверьте наличие CMakeLists.txt в корне репозитория."
+            echo "Сборка провалилась. Проверьте:"
+            echo "1. Наличие Shampoo.cpp в корне проекта"
+            echo "2. Установлен ли Visual Studio Build Tools"
+            echo "3. Добавлен ли компилятор cl в PATH"
         }
     }
 }
