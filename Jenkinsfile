@@ -2,43 +2,61 @@ pipeline {
     agent any
     
     environment {
-        // Путь к Visual Studio (автопоиск)
-        VS_PATH = bat(script: "call \"C:\\Program Files\\Microsoft Visual Studio\\Installer\\vswhere.exe\" -property installationPath", returnStdout: true).trim()
+        // Явное указание путей (измените под свою систему)
+        VS_PATH = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community"
+        CMAKE_PATH = "C:\\Program Files\\CMake\\bin\\cmake.exe"
     }
     
     stages {
-        stage('Check Environment') {
+        stage('Verify Tools') {
             steps {
                 script {
-                    // Проверка наличия CMakeLists.txt
-                    bat '''
+                    // Проверка наличия CMake
+                    bat """
                         @echo off
-                        dir /b CMakeLists.txt || (
-                            echo ОШИБКА: CMakeLists.txt не найден в корне проекта!
+                        if exist "${env.CMAKE_PATH}" (
+                            echo CMake найден: ${env.CMAKE_PATH}
+                        ) else (
+                            echo ОШИБКА: CMake не найден! Установите с https://cmake.org/download/
                             exit 1
                         )
-                    '''
+                    """
                     
-                    // Проверка наличия исходного файла
-                    bat '''
+                    // Проверка наличия Visual Studio
+                    bat """
                         @echo off
+                        if exist "${env.VS_PATH}\\VC\\Auxiliary\\Build\\vcvarsall.bat" (
+                            echo Visual Studio найден: ${env.VS_PATH}
+                        ) else (
+                            echo ОШИБКА: Visual Studio не найдена! Установите Community версию
+                            exit 1
+                        )
+                    """
+                    
+                    // Проверка файлов проекта
+                    bat """
+                        @echo off
+                        dir /b CMakeLists.txt || (
+                            echo ОШИБКА: CMakeLists.txt не найден!
+                            exit 1
+                        )
                         dir /b Shampoo.cpp || (
                             echo ОШИБКА: Shampoo.cpp не найден!
                             exit 1
                         )
-                    '''
+                    """
                 }
             }
         }
         
-        stage('Generate Build System') {
+        stage('Generate Project') {
             steps {
                 bat """
                     @echo off
                     call "${env.VS_PATH}\\VC\\Auxiliary\\Build\\vcvarsall.bat" x64
                     mkdir build
                     cd build
-                    cmake -G "Visual Studio 17 2022" ..
+                    "${env.CMAKE_PATH}" -G "Visual Studio 17 2022" ..
                 """
             }
         }
@@ -49,7 +67,7 @@ pipeline {
                     @echo off
                     call "${env.VS_PATH}\\VC\\Auxiliary\\Build\\vcvarsall.bat" x64
                     cd build
-                    cmake --build . --config Release
+                    "${env.CMAKE_PATH}" --build . --config Release
                 """
             }
         }
@@ -63,11 +81,13 @@ pipeline {
     
     post {
         failure {
-            echo "СБОРКА ПРОВАЛИЛАСЬ. ВАЖНЫЕ ШАГИ:"
-            echo "1. Установите Visual Studio 2022 с компонентом 'C++'"
-            echo "2. Установите CMake (https://cmake.org/download/)"
+            echo "ДЛЯ ИСПРАВЛЕНИЯ:"
+            echo "1. Убедитесь, что установлены:"
+            echo "   - Visual Studio 2022 Community с C++"
+            echo "   - CMake 3.15+"
+            echo "2. Проверьте пути в environment{} в Jenkinsfile"
             echo "3. Запустите Jenkins от имени администратора"
-            echo "4. Убедитесь, что в репозитории есть CMakeLists.txt и Shampoo.cpp"
+            echo "4. Проверьте наличие CMakeLists.txt и Shampoo.cpp"
         }
     }
 }
