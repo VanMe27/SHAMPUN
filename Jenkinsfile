@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        CMAKE_PATH = "C:\\Program Files\\CMake\\bin\\cmake.exe"
+        CMAKE_PATH = '"C:\\Program Files\\CMake\\bin\\cmake.exe"'
         VS_PATH = '"C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\Common7\\Tools\\VsDevCmd.bat"'
     }
 
@@ -13,34 +13,41 @@ pipeline {
                     // Проверка наличия CMake
                     bat """
                         @echo off
+                        echo Проверка CMake: ${CMAKE_PATH}
                         if exist ${CMAKE_PATH} (
-                            echo CMake найден: ${CMAKE_PATH}
+                            echo [OK] CMake найден
                         ) else (
-                            echo ОШИБКА: CMake не найден! Установите с https://cmake.org/download/
+                            echo [ОШИБКА] CMake не найден по пути: ${CMAKE_PATH}
                             exit 1
                         )
                     """
 
-                    // Проверка наличия Visual Studio (VsDevCmd.bat)
+                    // Проверка наличия Visual Studio
                     bat """
                         @echo off
+                        echo Проверка Visual Studio: ${VS_PATH}
                         if exist ${VS_PATH} (
-                            echo Visual Studio найден: ${VS_PATH}
+                            echo [OK] Visual Studio найден
                         ) else (
-                            echo ОШИБКА: Visual Studio не найдена! Проверьте путь VS_PATH
+                            echo [ОШИБКА] Visual Studio не найдена по пути: ${VS_PATH}
                             exit 1
                         )
                     """
 
-                    // Проверка наличия исходных файлов
+                    // Проверка наличия файлов проекта
                     bat """
                         @echo off
-                        if not exist CMakeLists.txt (
-                            echo ОШИБКА: CMakeLists.txt не найден!
+                        if exist CMakeLists.txt (
+                            echo [OK] Найден CMakeLists.txt
+                        ) else (
+                            echo [ОШИБКА] CMakeLists.txt не найден!
                             exit 1
                         )
-                        if not exist Shampoo.cpp (
-                            echo ОШИБКА: Shampoo.cpp не найден!
+
+                        if exist Shampoo.cpp (
+                            echo [OK] Найден Shampoo.cpp
+                        ) else (
+                            echo [ОШИБКА] Shampoo.cpp не найден!
                             exit 1
                         )
                     """
@@ -52,7 +59,7 @@ pipeline {
             steps {
                 bat """
                     @echo off
-                    call ${VS_PATH}
+                    call ${VS_PATH} > nul
                     mkdir build
                     cd build
                     ${CMAKE_PATH} -G "Visual Studio 17 2022" ..
@@ -64,7 +71,7 @@ pipeline {
             steps {
                 bat """
                     @echo off
-                    call ${VS_PATH}
+                    call ${VS_PATH} > nul
                     cd build
                     ${CMAKE_PATH} --build . --config Release
                 """

@@ -4,12 +4,12 @@ project(Shampoo)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Убедимся, что исходный файл существует
+# Подключаем исходники
 file(GLOB_RECURSE SOURCES "Shampoo.cpp")
 
 add_executable(shampoo ${SOURCES})
 
-# Настройка путей для исполняемого файла (для MSVC)
+# Настройка путей вывода для Visual Studio
 if(MSVC)
     set_target_properties(shampoo PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release"
